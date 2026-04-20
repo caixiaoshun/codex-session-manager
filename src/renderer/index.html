@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex 会话管家</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail surface">
+        <header class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 6.5h16M7 11.5h10M9 16.5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>Codex 会话管家</h1>
+            <p>本机记录清理台</p>
+          </div>
+        </header>
+
+        <section class="control-group" aria-label="Codex 目录">
+          <label class="field-label" for="codexHome">Codex 目录</label>
+          <div class="input-action-row">
+            <input id="codexHome" spellcheck="false" placeholder="选择 .codex 目录" />
+            <button id="chooseHome" type="button" class="btn-icon" aria-label="选择目录">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="actions" aria-label="扫描和筛选">
+          <button id="scanButton" class="btn-primary" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            重新扫描
+          </button>
+
+          <div class="filters" role="group" aria-label="归档状态筛选">
+            <button class="filter active" type="button" data-filter="all">全部</button>
+            <button class="filter" type="button" data-filter="active">未归档</button>
+            <button class="filter" type="button" data-filter="archived">已归档</button>
+          </div>
+
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="searchInput" class="search" placeholder="搜索标题、路径、ID 或工作区" />
+          </div>
+        </section>
+
+        <section class="stats-grid" aria-label="扫描统计">
+          <div class="stat-card">
+            <span class="stat-label">会话总数</span>
+            <strong id="totalCount" class="stat-value accent-blue">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">已选择</span>
+            <strong id="selectedCount" class="stat-value accent-green">0</strong>
+          </div>
+          <div class="stat-card col-span-2">
+            <span class="stat-label">本地占用</span>
+            <strong id="storageSize" class="stat-value">0 KB</strong>
+          </div>
+        </section>
+
+        <aside class="notice-box">
+          <div class="notice-icon" aria-hidden="true">!</div>
+          <div class="notice-content">
+            <strong>操作提醒</strong>
+            <span>删除前请退出 Codex。工具会清理本地文件、索引和数据库记录，但 SSD 物理介质无法保证不可恢复。</span>
+          </div>
+        </aside>
+      </aside>
+
+      <main class="content surface">
+        <div class="header-banner">
+          <div class="header-titles">
+            <p class="eyebrow">本地台账</p>
+            <h2>会话树</h2>
+            <p>按工作区归组展开，再筛选需要处理的记录。</p>
+          </div>
+          <div class="header-actions">
+            <span class="mode-pill">树形视图</span>
+            <button id="clearSelection" type="button" class="btn-secondary">清空选择</button>
+          </div>
+        </div>
+
+        <div id="status" class="status-bar">
+          <div class="pulse-dot" aria-hidden="true"></div>
+          <span id="statusText">已准备好扫描本地记录。</span>
+        </div>
+
+        <div class="scroll-container">
+          <div id="sessionList" class="session-list" aria-live="polite"></div>
+        </div>
+      </main>
+
+      <aside class="panel surface danger-zone">
+        <div class="header-banner panel-header">
+          <div class="header-titles">
+            <p class="eyebrow danger-text">删除前核对</p>
+            <h2>删除清单</h2>
+            <p>确认文件、索引和数据库记录后再执行。</p>
+          </div>
+        </div>
+
+        <div id="emptyPlan" class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M9 7V5h6v2"></path>
+            <path d="M7 10v8a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-8"></path>
+            <path d="M10 13v4"></path>
+            <path d="M14 13v4"></path>
+          </svg>
+          <p>选择左侧会话后，这里会列出将被删除的文件、索引和数据库记录。</p>
+        </div>
+
+        <div id="planView" class="plan hidden">
+          <dl class="plan-summary">
+            <div class="plan-metric">
+              <dt>目标</dt>
+              <dd id="planCount" class="danger-text">0</dd>
+            </div>
+            <div class="plan-metric">
+              <dt>JSONL</dt>
+              <dd id="planFiles">0</dd>
+            </div>
+            <div class="plan-metric">
+              <dt>索引</dt>
+              <dd id="planIndex">0</dd>
+            </div>
+            <div class="plan-metric">
+              <dt>日志</dt>
+              <dd id="planLogs">0</dd>
+            </div>
+          </dl>
+
+          <div class="selected-list scroll-container" id="selectedList"></div>
+
+          <div id="deleteProgress" class="delete-progress hidden" aria-live="polite">
+            <div class="progress-row">
+              <span id="deleteProgressText">等待删除</span>
+              <span id="deleteProgressCount"></span>
+            </div>
+            <div class="progress-track">
+              <span id="deleteProgressBar"></span>
+            </div>
+          </div>
+
+          <div class="danger-action-box">
+            <label class="custom-checkbox">
+              <input id="vacuumInput" type="checkbox" checked />
+              <span class="checkmark"></span>
+              <span class="label-text">删除后整理 SQLite 数据库</span>
+            </label>
+
+            <button id="deleteButton" class="btn-danger mt-4" type="button" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span id="deleteButtonText">永久删除选中会话</span>
+            </button>
+            <p class="danger-copy mt-3">操作不可撤销。建议先关闭 Codex Desktop。</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

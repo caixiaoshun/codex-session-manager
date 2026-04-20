@@ -1,0 +1,77 @@
+name: Build desktop apps
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.artifact }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            artifact: CodexSessionManager-windows-x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            artifact: CodexSessionManager-macos-x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            artifact: CodexSessionManager-macos-arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            artifact: CodexSessionManager-linux-x64
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Package app
+        run: npm run package -- --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
+
+      - name: Archive bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          bundle="$(find dist -maxdepth 1 -type d -name "CodexSessionManager-${{ matrix.platform }}-${{ matrix.arch }}" | head -n 1)"
+          if [ -z "$bundle" ]; then
+            echo "No packaged bundle found in dist" >&2
+            find dist -maxdepth 2 -type d >&2 || true
+            exit 1
+          fi
+          tar -czf "artifacts/${{ matrix.artifact }}.tar.gz" -C "$(dirname "$bundle")" "$(basename "$bundle")"
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}.tar.gz
+          if-no-files-found: error
+          archive: false

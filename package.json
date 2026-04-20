@@ -1,0 +1,19 @@
+{
+  "name": "codex-session-manager",
+  "version": "0.1.0",
+  "description": "Electron tool for inspecting and permanently deleting local Codex session records.",
+  "main": "src/main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager . CodexSessionManager --out=dist --overwrite --ignore=\"^/dist($|/)\" --ignore=\"^/test($|/)\" --ignore=\"^/.github($|/)\"",
+    "package:win": "npm run package -- --platform=win32 --arch=x64",
+    "package:mac": "npm run package -- --platform=darwin --arch=x64,arm64",
+    "package:linux": "npm run package -- --platform=linux --arch=x64",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@electron/packager": "^19.1.0",
+    "electron": "^39.2.6"
+  }
+}
