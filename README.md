@@ -19,15 +19,6 @@ Codex Session Manager helps you inspect local Codex conversation records, separa
 - Show live delete progress and refresh the list after deletion.
 - Package the app for Windows, macOS, and Linux with GitHub Actions.
 
-## Screenshots
-
-Add screenshots here after publishing the repository:
-
-```text
-docs/screenshots/main-window.png
-docs/screenshots/delete-plan.png
-```
-
 ## How It Works
 
 Codex stores local conversation data in several places under `~/.codex`. This app scans:
@@ -100,21 +91,6 @@ npm run package -- --platform=win32 --arch=x64
 npm run package -- --platform=darwin --arch=arm64
 npm run package -- --platform=linux --arch=x64
 ```
-
-## GitHub Actions
-
-The workflow in `.github/workflows/build.yml` builds desktop bundles for:
-
-| Runner | Platform | Architecture | Artifact |
-| --- | --- | --- | --- |
-| `windows-latest` | Windows | x64 | `CodexSessionManager-windows-x64` |
-| `macos-latest` | macOS | x64 | `CodexSessionManager-macos-x64` |
-| `macos-latest` | macOS | arm64 | `CodexSessionManager-macos-arm64` |
-| `ubuntu-latest` | Linux | x64 | `CodexSessionManager-linux-x64` |
-
-The workflow runs on pushes to `main`, pull requests, and manual dispatch. Each job installs dependencies with `npm ci`, runs tests, packages the app, creates a `.tar.gz`, and uploads it as a workflow artifact.
-
-> GitHub Actions workflows are only detected when `.github/workflows/build.yml` is at the repository root. If you keep this app inside a larger repository, move the `.github` directory to that repository root and set `defaults.run.working-directory` if needed.
 
 ## Safety Notes
 
