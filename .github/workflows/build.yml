@@ -62,7 +62,7 @@ jobs:
           - os: ubuntu-latest
             artifact: CodexSessionManager-linux-x64
             build_args: --linux AppImage --x64
-            asset_glob: CodexSessionManager-*-linux-x64.AppImage
+            asset_glob: CodexSessionManager-*-linux-*.AppImage
 
     steps:
       - name: Check out repository
