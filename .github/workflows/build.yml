@@ -99,7 +99,6 @@ jobs:
           name: ${{ matrix.artifact }}
           path: artifacts/${{ matrix.artifact }}.tar.gz
           if-no-files-found: error
-          archive: false
 
   publish-release:
     name: Publish release
