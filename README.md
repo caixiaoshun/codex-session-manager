@@ -62,35 +62,39 @@ The test suite creates a temporary `.codex` fixture, scans it, deletes a session
 
 ## Package Locally
 
-Create a Windows bundle:
+Create a Windows NSIS installer:
 
 ```bash
-npm run package:win
+npm run dist:win
 ```
 
-Create macOS bundles:
+Create a macOS DMG for Intel:
 
 ```bash
-npm run package:mac
+npm run dist:mac:x64
 ```
 
-Run macOS packaging on macOS. Electron Packager may skip macOS bundles on Windows hosts because `.app` bundles require symlinks.
-
-Create a Linux bundle:
+Create a macOS DMG for Apple Silicon:
 
 ```bash
-npm run package:linux
+npm run dist:mac:arm64
 ```
 
-All bundles are written to `dist/`.
-
-You can also pass Electron Packager options directly:
+Create a Linux AppImage:
 
 ```bash
-npm run package -- --platform=win32 --arch=x64
-npm run package -- --platform=darwin --arch=arm64
-npm run package -- --platform=linux --arch=x64
+npm run dist:linux
 ```
+
+Run macOS packaging on macOS. The generated installers are written to `dist/`.
+
+This project now produces release-ready distributables instead of directory archives:
+
+| Platform | Output |
+| --- | --- |
+| Windows | NSIS installer `.exe` |
+| macOS | `.dmg` |
+| Linux | `.AppImage` |
 
 ## Safety Notes
 

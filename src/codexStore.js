@@ -68,6 +68,13 @@ function parseJsonLine(line) {
   }
 }
 
+function pythonWorkerScriptPath() {
+  if (__dirname.includes('app.asar') && process.resourcesPath) {
+    return path.join(process.resourcesPath, 'scripts', 'sqlite_worker.py');
+  }
+  return path.resolve(__dirname, '..', 'scripts', 'sqlite_worker.py');
+}
+
 function idFromFilename(filePath) {
   const base = path.basename(filePath, '.jsonl');
   const match = base.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
@@ -146,7 +153,7 @@ async function readIndex(codexHome) {
 }
 
 function runPythonWorker(args, timeoutMs = 30000) {
-  const script = path.resolve(__dirname, '..', 'scripts', 'sqlite_worker.py');
+  const script = pythonWorkerScriptPath();
   const candidates = process.platform === 'win32'
     ? [
         { cmd: 'python', args: [script, ...args] },
@@ -372,5 +379,6 @@ module.exports = {
   scanCodexHome,
   buildDeletePlan,
   deleteSessions,
+  pythonWorkerScriptPath,
   validateCodexHome,
 };

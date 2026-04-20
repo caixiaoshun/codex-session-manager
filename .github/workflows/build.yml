@@ -1,5 +1,8 @@
 name: Build and release desktop apps
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
     inputs:
@@ -45,21 +48,21 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            platform: win32
-            arch: x64
             artifact: CodexSessionManager-windows-x64
+            build_args: --win nsis --x64
+            asset_glob: CodexSessionManager-*-windows-x64-setup.exe
           - os: macos-latest
-            platform: darwin
-            arch: x64
             artifact: CodexSessionManager-macos-x64
+            build_args: --mac dmg --x64
+            asset_glob: CodexSessionManager-*-macos-x64.dmg
           - os: macos-latest
-            platform: darwin
-            arch: arm64
             artifact: CodexSessionManager-macos-arm64
+            build_args: --mac dmg --arm64
+            asset_glob: CodexSessionManager-*-macos-arm64.dmg
           - os: ubuntu-latest
-            platform: linux
-            arch: x64
             artifact: CodexSessionManager-linux-x64
+            build_args: --linux AppImage --x64
+            asset_glob: CodexSessionManager-*-linux-x64.AppImage
 
     steps:
       - name: Check out repository
@@ -78,26 +81,27 @@ jobs:
         run: npm test
 
       - name: Package app
-        run: npm run package -- --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
+        run: npm run dist -- ${{ matrix.build_args }}
 
-      - name: Archive bundle
+      - name: Collect distributable
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p artifacts
-          bundle="$(find dist -maxdepth 1 -type d -name "CodexSessionManager-${{ matrix.platform }}-${{ matrix.arch }}" | head -n 1)"
-          if [ -z "$bundle" ]; then
-            echo "No packaged bundle found in dist" >&2
-            find dist -maxdepth 2 -type d >&2 || true
+          shopt -s nullglob
+          mkdir -p release-assets
+          matches=(dist/${{ matrix.asset_glob }})
+          if [ "${#matches[@]}" -ne 1 ]; then
+            echo "Expected exactly one distributable matching ${{ matrix.asset_glob }}." >&2
+            ls -lah dist >&2 || true
             exit 1
           fi
-          tar -czf "artifacts/${{ matrix.artifact }}.tar.gz" -C "$(dirname "$bundle")" "$(basename "$bundle")"
+          cp "${matches[0]}" release-assets/
 
       - name: Upload bundle
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: artifacts/${{ matrix.artifact }}.tar.gz
+          path: release-assets/*
           if-no-files-found: error
 
   publish-release:
@@ -132,7 +136,7 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
 
-          assets=(release-assets/*.tar.gz)
+          assets=(release-assets/*)
           if [ "${#assets[@]}" -eq 0 ]; then
             echo "No packaged release assets were downloaded." >&2
             exit 1

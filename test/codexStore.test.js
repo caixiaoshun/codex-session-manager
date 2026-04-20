@@ -5,7 +5,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const test = require('node:test');
 
-const { scanCodexHome, buildDeletePlan, deleteSessions } = require('../src/codexStore');
+const { scanCodexHome, buildDeletePlan, deleteSessions, pythonWorkerScriptPath } = require('../src/codexStore');
 
 function runPython(code, cwd) {
   execFileSync('python', ['-X', 'utf8', '-c', code], { cwd, stdio: 'pipe' });
@@ -99,4 +99,10 @@ test('scan and permanently delete a Codex session fixture', async () => {
   } finally {
     await fs.rm(fixture.root, { recursive: true, force: true });
   }
+});
+
+test('resolve python worker script path in development', async () => {
+  const scriptPath = pythonWorkerScriptPath();
+  assert.match(scriptPath, /scripts[\\/]+sqlite_worker\.py$/);
+  await fs.access(scriptPath);
 });

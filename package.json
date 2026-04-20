@@ -4,16 +4,82 @@
   "description": "Electron tool for inspecting and permanently deleting local Codex session records.",
   "main": "src/main.js",
   "license": "MIT",
+  "author": "caixiaoshun",
   "scripts": {
     "start": "electron .",
-    "package": "electron-packager . CodexSessionManager --out=dist --overwrite --ignore=\"^/dist($|/)\" --ignore=\"^/test($|/)\" --ignore=\"^/.github($|/)\"",
-    "package:win": "npm run package -- --platform=win32 --arch=x64",
-    "package:mac": "npm run package -- --platform=darwin --arch=x64,arm64",
-    "package:linux": "npm run package -- --platform=linux --arch=x64",
+    "dist": "electron-builder --publish never",
+    "dist:win": "npm run dist -- --win nsis --x64",
+    "dist:mac:x64": "npm run dist -- --mac dmg --x64",
+    "dist:mac:arm64": "npm run dist -- --mac dmg --arm64",
+    "dist:linux": "npm run dist -- --linux AppImage --x64",
     "test": "node --test"
   },
+  "build": {
+    "appId": "com.caixiaoshun.codex-session-manager",
+    "productName": "CodexSessionManager",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "LICENSE",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "scripts/sqlite_worker.py",
+        "to": "scripts/sqlite_worker.py"
+      }
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "CodexSessionManager-${version}-windows-${arch}-setup.${ext}"
+    },
+    "mac": {
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "artifactName": "CodexSessionManager-${version}-macos-${arch}.${ext}"
+    },
+    "linux": {
+      "category": "Utility",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "appImage": {
+      "artifactName": "CodexSessionManager-${version}-linux-${arch}.${ext}"
+    }
+  },
   "devDependencies": {
-    "@electron/packager": "^19.1.0",
-    "electron": "^39.2.6"
+    "electron": "^39.2.6",
+    "electron-builder": "^26.8.1"
   }
 }
